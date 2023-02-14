@@ -1,23 +1,11 @@
-import logo from './logo.svg';
-import './App.css';
 
 function App() {
+
+  let nft = {name: "Faraway", symbol: "FTK", copies: 1, image: "https://via.placeholder.com/600x400.jpg" };
+
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <NFTCard nft={nft} />
     </div>
   );
 }
