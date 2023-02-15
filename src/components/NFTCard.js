@@ -4,11 +4,11 @@ const NFTCard = (props) => {
     let nft = props.nft;
     return (
         <NftCard onClick={() => props.toggleModal()}>
-            <NftPhoto style={{ backgroundImage: `url(${nft && nft.image})` }} />
+            <NftPhoto style={{backgroundImage: `url(${nft && nft.image})`}}/>
             <div style={{margin: 5}}>
                 <NftCollectionText>{nft && nft.symbol}</NftCollectionText>
                 <NftName>{nft && nft.name}</NftName>
-                <NftName style={{float: "right"}}>{`x${nft && nft.copies}` }</NftName>
+                <NftName style={{float: "right"}}>{`x${nft && nft.copies}`}</NftName>
             </div>
         </NftCard>
     )
@@ -18,13 +18,11 @@ const NftCollectionText = styled.div`
   font-size: 12px;
   color: gray;
 `
-
 const NftName = styled.div`
   font-size: 12px;
   font-weight: bold;
   display: inline;
 `
-
 const NftPhoto = styled.div`
   display: block;
   width: 200px;
@@ -34,7 +32,6 @@ const NftPhoto = styled.div`
   border-radius: 10px;
   margin: auto;
 `
-
 const NftCard = styled.div`
   width: 200px;
   height: 250px;

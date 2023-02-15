@@ -1,4 +1,5 @@
-import {NFTCard, NftPhoto} from "./components/NFTCard";
+import {NFTCard} from "./components/NFTCard";
+import {NFTModal} from "./components/NFTModal";
 import styled from "styled-components";
 import {useState} from 'react';
 
@@ -7,9 +8,27 @@ function App() {
     const [selectedNft, setSelectedNft] = useState();
 
     const nfts = [
-        {name: "Faraway1", symbol: "FTK", copies: 1, image: "https://via.placeholder.com/600x400.jpg"},
-        {name: "Faraway2", symbol: "FTK", copies: 1, image: "https://via.placeholder.com/600x400.jpg"},
-        {name: "Faraway3", symbol: "FTK", copies: 1, image: "https://via.placeholder.com/600x400.jpg"},
+        {
+            name: "Faraway1", symbol: "FTK", copies: 1, image: "https://via.placeholder.com/600x400.jpg",
+            attributes: [
+                {trait_type: "Background", value: "Red"},
+                {trait_type: "Background", value: "Red"}],
+            description: "This is a description"
+        },
+        {
+            name: "Faraway2", symbol: "FTK", copies: 1, image: "https://via.placeholder.com/600x400.jpg",
+            attributes: [
+                {trait_type: "Background", value: "Red"},
+                {trait_type: "Background", value: "Red"}],
+            description: "This is a description"
+        },
+        {
+            name: "Faraway3", symbol: "FTK", copies: 1, image: "https://via.placeholder.com/600x400.jpg",
+            attributes: [
+                {trait_type: "Background", value: "Red"},
+                {trait_type: "Background", value: "Red"}],
+            description: "This is a description"
+        },
     ];
 
     const toggleModal = (i) => {
@@ -39,100 +58,23 @@ function App() {
     );
 }
 
-const CloseButton = styled.span`
-  position: absolute;
-  right: 0;
-  top: 0;
-  padding: 15px 20px 0 0;
-  font-size: 20px;
-  font-weight: bold;
-  cursor: pointer;
-`
-
-const NFTModal = (props) => {
-    const nft = props.nft;
-    return (
-        <Modal>
-            <ModalContent>
-                <ModalGrid>
-                    <NftPhoto style={{backgroundImage: `url(${nft && nft.image})`, height: 400, width: 400}}/>
-                    <div>
-                        <ModalTitle>{nft && nft.name}</ModalTitle>
-                        <Paragraph>{`You own ${nft.copies} copies`}</Paragraph>
-                        <SectionTest>Description</SectionTest>
-                        <Paragraph style={{width: 400}}>{nft && nft.description}</Paragraph>
-                        <SectionTest>Attributes</SectionTest>
-                    </div>
-                </ModalGrid>
-                <CloseButton onClick={() => props.toggleModal()}>
-                    &times;
-                </CloseButton>
-            </ModalContent>
-        </Modal>
-    )
-}
-
-const ModalTitle = styled.h1`
-  margin: 0;
-`
-
-const Paragraph = styled.p`
-  margin: 0 0 15px 0;
-`
-
-const SectionTest = styled.h3`
-  margin: 5px 0 5px 0;
-`
-
-const ModalGrid = styled.div`
-  display: inline-grid;
-  grid-template-columns: 1fr 1fr;
-  grid-gap: 40px;
-`
-
-const Modal = styled.div`
-  position: fixed;
-  display: flex;
-  align-items: center;
-  z-index: 100;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  overflow: auto; // scroll if needed
-  background-color: rgba(0, 0, 0, 0.5);
-`
-
-const ModalContent = styled.div`
-  position: relative;
-  width: 900px;
-  margin: auto;
-  background-color: white;
-  border-radius: 20px;
-  padding: 20px;
-`
-
 const Title = styled.h1`
   margin: 0;
   text-align: center
 `
-
 const SubTitle = styled.h4`
   color: gray;
   margin-top: 0;
   text-align: center
 `
-
 const Container = styled.div`
   width: 70%;
   max-width: 1200px;
   margin: 100px auto auto;
 `
-
 const Grid = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr 1fr 1fr;
   row-gap: 40px;
 `
-
 export default App;
