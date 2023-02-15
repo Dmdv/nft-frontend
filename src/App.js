@@ -1,12 +1,23 @@
 import {NFTCard, NftPhoto} from "./components/NFTCard";
 import styled from "styled-components";
+import {useState} from 'react';
 
 function App() {
+    const [showModal, setShowModal] = useState(false);
+    const [selectedNft, setSelectedNft] = useState();
+
     const nfts = [
         {name: "Faraway1", symbol: "FTK", copies: 1, image: "https://via.placeholder.com/600x400.jpg"},
         {name: "Faraway2", symbol: "FTK", copies: 1, image: "https://via.placeholder.com/600x400.jpg"},
         {name: "Faraway3", symbol: "FTK", copies: 1, image: "https://via.placeholder.com/600x400.jpg"},
     ];
+
+    const toggleModal = (i) => {
+        if (i >= 0) {
+            setSelectedNft(nfts[i]);
+        }
+        setShowModal(!showModal);
+    }
 
     return (
         <div className="App">
@@ -16,14 +27,27 @@ function App() {
                 <Grid>
                     {
                         nfts.map((nft, index) =>
-                            <NFTCard key={index} nft={nft}/>)
+                            <NFTCard key={index} nft={nft} toggleModal={() => toggleModal(index)}/>)
                     }
                 </Grid>
             </Container>
-            <NFTModal nft={nfts[0]}/>
+            {
+                showModal &&
+                <NFTModal nft={selectedNft} toggleModal={() => toggleModal()}/>
+            }
         </div>
     );
 }
+
+const CloseButton = styled.span`
+  position: absolute;
+  right: 0;
+  top: 0;
+  padding: 15px 20px 0 0;
+  font-size: 20px;
+  font-weight: bold;
+  cursor: pointer;
+`
 
 const NFTModal = (props) => {
     const nft = props.nft;
@@ -40,6 +64,9 @@ const NFTModal = (props) => {
                         <SectionTest>Attributes</SectionTest>
                     </div>
                 </ModalGrid>
+                <CloseButton onClick={() => props.toggleModal()}>
+                    &times;
+                </CloseButton>
             </ModalContent>
         </Modal>
     )

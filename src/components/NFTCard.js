@@ -3,7 +3,7 @@ import styled from "styled-components";
 const NFTCard = (props) => {
     let nft = props.nft;
     return (
-        <NftCard>
+        <NftCard onClick={() => props.toggleModal()}>
             <NftPhoto style={{ backgroundImage: `url(${nft && nft.image})` }} />
             <div style={{margin: 5}}>
                 <NftCollectionText>{nft && nft.symbol}</NftCollectionText>
