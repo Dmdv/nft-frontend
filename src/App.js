@@ -1,5 +1,6 @@
 import {NFTCard} from "./components/NFTCard";
 import {NFTModal} from "./components/NFTModal";
+import {NFTCollectionCard} from "./components/NFTCollectionCard";
 import styled from "styled-components";
 import {useState, useEffect} from 'react';
 import {ethers} from "ethers";
@@ -31,9 +32,15 @@ export const App = () => {
         },
     ];
 
+    const initialCollections = [
+        {name: "Faraway 1", symbol: "FTK1", address: "0xfeDB19A138fdF3432A88eB3dB9AD36f7aed073B0"},
+        {name: "Faraway 2", symbol: "FTK2", address: "0xfeDB19A138fdF3432A88eB3dB9AD36f7aed073B0"},
+    ];
+
     const [showModal, setShowModal] = useState(false);
     const [selectedNft, setSelectedNft] = useState();
     const [nfts, setNfts] = useState(initialNfts);
+    const [collections, setCollections] = useState(initialCollections);
 
     useEffect(() => {
         (
@@ -120,8 +127,26 @@ export const App = () => {
     return (
         <div className="App">
             <Container>
-                <Title>Faraway NFT collection</Title>
+                <Title>NFT collections factory</Title>
                 <SubTitle>The rarest and best</SubTitle>
+                <ContractCreator>
+                    <Input placeholder="Token Symbol"/>
+                    <Input placeholder="Token Name" />
+                    <ConfirmationButton>Create</ConfirmationButton>
+                </ContractCreator>
+                <CollectionList>
+                    {
+                        collections.map((collection, index) =>
+                            <NFTCollectionCard key={index} collection={collection}/>)
+                    }
+                </CollectionList>
+                <ContractEditor>
+                    <Input placeholder="Contract Address"></Input>
+                    <Input placeholder="Token ID"></Input>
+                    <Input placeholder="Token URI"></Input>
+                    <ConfirmationButton>Mint</ConfirmationButton>
+                </ContractEditor>
+
                 <Grid>
                     {
                         nfts.map((nft, index) =>
@@ -138,21 +163,60 @@ export const App = () => {
 }
 
 const Title = styled.h1`
-      margin: 0;
-      text-align: center
-    `
+  margin: 0;
+  text-align: center
+`
 const SubTitle = styled.h4`
-      color: gray;
-      margin-top: 0;
-      text-align: center
-    `
+  color: gray;
+  margin-top: 0;
+  text-align: center
+`
 const Container = styled.div`
-      width: 70%;
-      max-width: 1200px;
-      margin: 100px auto auto;
-    `
+  width: 70%;
+  max-width: 1200px;
+  margin: 100px auto auto;
+`
 const Grid = styled.div`
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr 1fr;
-      row-gap: 40px;
-    `
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  row-gap: 40px;
+`
+const ContractEditor = styled.div`
+  grid-column: 1 / 3;
+  grid-row: 2 / 3;
+  row-gap: 40px;
+`
+const ConfirmationButton = styled.button`
+  margin-top: 6px;
+  width: 100px;
+  height: 40px;
+  font-size: 14px;
+  margin-right: 10px;
+`
+const ContractCreator = styled.div`
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  margin: 20px 0;
+`
+const CollectionList = styled.div`
+  display: flex;
+  flex-direction: column;
+  flex-wrap: wrap;
+  margin: 20px 0;
+`
+const Input = styled.input`
+  width: 200px;
+  height: 40px;
+  padding: 0 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+  margin-top: 6px;
+  margin-bottom: 16px;
+  margin-right: 10px;
+  resize: vertical;
+  ::placeholder {
+    color: orange;
+  }
+`
