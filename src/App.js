@@ -2,39 +2,38 @@ import {NFTCard} from "./components/NFTCard";
 import {NFTModal} from "./components/NFTModal";
 import styled from "styled-components";
 import {useState} from 'react';
-import {ethers} from "ethers";
-import address from "address";
+import { ethers } from "ethers";
 
 const axios = require('axios');
 
-function App() {
+const initialNfts = [
+    {
+        name: "Faraway1", symbol: "FTK", copies: 1, image: "https://via.placeholder.com/600x400.jpg",
+        attributes: [
+            {trait_type: "Background", value: "Red"},
+            {trait_type: "Background", value: "Red"}],
+        description: "This is a description"
+    },
+    {
+        name: "Faraway2", symbol: "FTK", copies: 1, image: "https://via.placeholder.com/600x400.jpg",
+        attributes: [
+            {trait_type: "Background", value: "Red"},
+            {trait_type: "Background", value: "Red"}],
+        description: "This is a description"
+    },
+    {
+        name: "Faraway3", symbol: "FTK", copies: 1, image: "https://via.placeholder.com/600x400.jpg",
+        attributes: [
+            {trait_type: "Background", value: "Red"},
+            {trait_type: "Background", value: "Red"}],
+        description: "This is a description"
+    },
+];
+
+export const App = () => {
     const [showModal, setShowModal] = useState(false);
     const [selectedNft, setSelectedNft] = useState();
     const [nfts, setNfts] = useState(initialNfts);
-
-    const initialNfts = [
-        {
-            name: "Faraway1", symbol: "FTK", copies: 1, image: "https://via.placeholder.com/600x400.jpg",
-            attributes: [
-                {trait_type: "Background", value: "Red"},
-                {trait_type: "Background", value: "Red"}],
-            description: "This is a description"
-        },
-        {
-            name: "Faraway2", symbol: "FTK", copies: 1, image: "https://via.placeholder.com/600x400.jpg",
-            attributes: [
-                {trait_type: "Background", value: "Red"},
-                {trait_type: "Background", value: "Red"}],
-            description: "This is a description"
-        },
-        {
-            name: "Faraway3", symbol: "FTK", copies: 1, image: "https://via.placeholder.com/600x400.jpg",
-            attributes: [
-                {trait_type: "Background", value: "Red"},
-                {trait_type: "Background", value: "Red"}],
-            description: "This is a description"
-        },
-    ];
 
     const toggleModal = (i) => {
         if (i >= 0) {
@@ -47,8 +46,7 @@ function App() {
         const INFURA_API_KEY = process.env.REACT_APP_INFURA_API_KEY;
         const rpc = `https://goerli.infura.io/v3/${INFURA_API_KEY}`;
 
-
-        const ethersProvider = new ethers.providers.JsonRpcProvider(rpc);
+        const ethersProvider = new ethers.JsonRpcProvider(rpc);
 
         const abi = [
             "function name() public view returns (string memory)",
@@ -61,16 +59,16 @@ function App() {
         const numberOfNft = (await nftCollection.totalSupply()).to_number();
         const symbol = await nftCollection.symbol();
         const name = await nftCollection.name();
-        const accounts = Array(numberOfNft).fill(address);
-        const ids = Array.from({length: numberOfNft}, (_, i) => i + 1);
+        // const accounts = Array(numberOfNft).fill(address);
+        // const ids = Array.from({length: numberOfNft}, (_, i) => i + 1);
 
         let tempArray = [];
         let baseUrl = "";
 
         for (let i = 1; i <= numberOfNft; i++) {
-            if (i == 1) {
+            if (i === 1) {
                 const uri = await nftCollection.tokenURI(i);
-                const baseUrl = uri.replace("/\d+.json/", "");
+                baseUrl = uri.replace("/d+.json/", "");
                 const response = await axios.get(uri);
                 const nft = response.data;
                 nft.symbol = symbol;
@@ -128,4 +126,4 @@ function App() {
       grid-template-columns: 1fr 1fr 1fr 1fr;
       row-gap: 40px;
     `
-    export default App;
+}
