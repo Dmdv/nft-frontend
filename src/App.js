@@ -2,7 +2,7 @@ import {NFTCard} from "./components/NFTCard";
 import {NFTModal} from "./components/NFTModal";
 import {NFTCollectionCard} from "./components/NFTCollectionCard";
 import styled from "styled-components";
-import {useState, useEffect} from 'react';
+import {useState, useEffect, useRef} from 'react';
 import {ethers} from "ethers";
 import {getWalletAddress} from "./helpers";
 import axios from 'axios';
@@ -41,6 +41,11 @@ export const App = () => {
     const [selectedNft, setSelectedNft] = useState();
     const [nfts, setNfts] = useState(initialNfts);
     const [collections, setCollections] = useState(initialCollections);
+    const [tokenSymbolToCreate, setTokenSymbolToCreate] = useState("");
+    const [tokenNameToCreate, setTokenNameToCreate] = useState("");
+    const inputNameRef = useRef(null);
+    const inputSymbolRef = useRef(null);
+    const buttonCreateRef = useRef(null);
 
     useEffect(() => {
         (
@@ -52,12 +57,13 @@ export const App = () => {
                 }
             }
         )()
+
     }, []);
 
     useEffect(() => {
         (
             async () => {
-                await getCollections()
+                await getCollections();
             }
         )()
     }, []);
@@ -69,28 +75,70 @@ export const App = () => {
         setShowModal(!showModal);
     }
 
-    async function createCollection(name, symbol) {
-        console.log("Creating collection with name: " + name + " and symbol: " + symbol);
+
+    async function createCollection() {
+        console.log("Started creating collection with name: " + tokenNameToCreate + " and symbol: " + tokenSymbolToCreate);
+        if (tokenNameToCreate === "" || tokenSymbolToCreate === "") {
+            console.log("Name or symbol is empty");
+            return;
+        }
+
+        let signer = null;
+        let provider;
+        if (window.ethereum == null) {
+            // If MetaMask is not installed, we use the default provider,
+            // which is backed by a variety of third-party services (such
+            // as INFURA). They do not have private keys installed so are
+            // only have read-only access
+            console.log("MetaMask not installed; using read-only defaults")
+            provider = ethers.getDefaultProvider();
+
+        } else {
+            // Connect to the MetaMask EIP-1193 object. This is a standard
+            // protocol that allows Ethers access to make all read-only
+            // requests through MetaMask.
+            provider = new ethers.BrowserProvider(window.ethereum)
+
+            // It also provides an opportunity to request access to write
+            // operations, which will be performed by the private key
+            // that MetaMask manages for the user.
+            signer = await provider.getSigner();
+        }
+
         const abi = [
             "function create(string calldata name, string calldata symbol) external returns (address)",
         ];
-        const rpc = "https://goerli.blockpi.network/v1/rpc/public";
-        const ethersProvider = new ethers.JsonRpcProvider(rpc);
+
+        // const rpc = "https://goerli.blockpi.network/v1/rpc/public";
+        // const provider = new ethers.JsonRpcProvider(rpc);
+
+        signer = await provider.getSigner()
+
         let factory = new ethers.Contract(
             process.env.REACT_APP_FACTORY_ADDRESS,
             abi,
-            ethersProvider
+            signer
         )
 
-        // const provider = new ethers.providers.Web3Provider(window.ethereum);
+        // Begin listening for any Transfer event
+        // factory.on("TokenCreated", (from, to, _amount, event) => {
+        //     console.log("Token created: " + from + " to " + to);
+        //     console.log(event);
+        //     console.log(event.args);
+        //     (
+        //         async () => {
+        //             console.log("Refreshing collections");
+        //             await getCollections();
+        //         }
+        //     )()
+        //
+        //     event.removeListener();
+        // });
 
-        const address = await getWalletAddress();
-        if (address) {
-            console.log("Connected to address: " + address);
-            const signer = await ethersProvider.getSigner(address);
-            const tx = await factory.create(name, symbol, signer);
-            await tx.wait();
-        }
+        const tx = await factory.create(tokenNameToCreate, tokenSymbolToCreate, signer);
+        await tx.wait();
+        console.log("Created collection with name: " + tokenNameToCreate + " and symbol: " + tokenSymbolToCreate);
+        await getCollections();
     }
 
     async function getCollections() {
@@ -103,7 +151,8 @@ export const App = () => {
             "function tokenName(address address_) public view returns (string memory)",
             "function tokenSymbol(address address_) public view returns (string memory)",
             "function tokenUri(address address_, uint256 tokenId_) public view returns (string memory)",
-            "function tokenTotalSupply(address address_) public view returns (uint256)"
+            "function tokenTotalSupply(address address_) public view returns (uint256)",
+            "function tokenList(uint256 i) public view returns (address)",
         ]
 
         let factory = new ethers.Contract(
@@ -114,6 +163,7 @@ export const App = () => {
 
         let collectionNumber = Number(await factory.count());
         console.log("Number of collections created by Factory: " + collectionNumber);
+        let tempArray = [];
         for (let i = 0; i < collectionNumber; i++) {
             let collection = initialCollections[0];
             const address = await factory.tokenList(i);
@@ -123,17 +173,33 @@ export const App = () => {
             const symbol = await factory.tokenSymbol(address);
             const totalSupply = await factory.tokenTotalSupply(address);
 
-            console.log("Name: " + name);
-            console.log("Symbol: " + symbol);
-            console.log("Total supply: " + totalSupply);
+            console.log("Collection name: " + name);
 
             collection.symbol = name;
             collection.name = symbol;
             collection.address = address;
             collection.totalSupply = totalSupply;
 
-            // setCollections([...collections, collection]);
+            tempArray.push(collection);
         }
+
+        if (tempArray.length === 0) {
+            tempArray = initialCollections;
+        }
+
+        setCollections(tempArray);
+    }
+
+    const handleSymbolChange = () => {
+        setTokenSymbolToCreate(inputSymbolRef.current.value);
+    }
+
+    const handleNameChange = (e) => {
+        setTokenNameToCreate(inputNameRef.current.value);
+    }
+
+    const handleCreateCollection = async () => {
+        await createCollection()
     }
 
     // TODO:
@@ -205,9 +271,9 @@ export const App = () => {
                 <Title>NFT collections factory</Title>
                 <SubTitle>The rarest and best</SubTitle>
                 <ContractCreator>
-                    <Input placeholder="Token Symbol"/>
-                    <Input placeholder="Token Name" />
-                    <ConfirmationButton>Create</ConfirmationButton>
+                    <Input placeholder="Token Symbol" ref={inputSymbolRef} onInput={handleSymbolChange}/>
+                    <Input placeholder="Token Name" ref={inputNameRef}  onInput={handleNameChange}/>
+                    <ConfirmationButton ref={buttonCreateRef} onClick={handleCreateCollection}>Create Collection</ConfirmationButton>
                 </ContractCreator>
                 <CollectionList>
                     {
@@ -263,7 +329,7 @@ const ContractEditor = styled.div`
 `
 const ConfirmationButton = styled.button`
   margin-top: 6px;
-  width: 100px;
+  width: 200px;
   height: 40px;
   font-size: 14px;
   margin-right: 10px;
@@ -291,6 +357,7 @@ const Input = styled.input`
   margin-bottom: 16px;
   margin-right: 10px;
   resize: vertical;
+
   ::placeholder {
     color: orange;
   }
