@@ -83,7 +83,7 @@ export const App = () => {
             return;
         }
 
-        let signer = null;
+        let signer;
         let provider;
         if (window.ethereum == null) {
             // If MetaMask is not installed, we use the default provider,
@@ -165,20 +165,19 @@ export const App = () => {
         console.log("Number of collections created by Factory: " + collectionNumber);
         let tempArray = [];
         for (let i = 0; i < collectionNumber; i++) {
-            let collection = initialCollections[0];
             const address = await factory.tokenList(i);
-            console.log("Loading nft collection for address: " + address);
-
             const name = await factory.tokenName(address)
             const symbol = await factory.tokenSymbol(address);
             const totalSupply = await factory.tokenTotalSupply(address);
-
+            console.log("Loading nft collection for address: " + address);
             console.log("Collection name: " + name);
 
-            collection.symbol = name;
-            collection.name = symbol;
-            collection.address = address;
-            collection.totalSupply = totalSupply;
+            let collection = {
+                name: name,
+                symbol: symbol,
+                address: address,
+                totalSupply: totalSupply,
+            };
 
             tempArray.push(collection);
         }
@@ -194,7 +193,7 @@ export const App = () => {
         setTokenSymbolToCreate(inputSymbolRef.current.value);
     }
 
-    const handleNameChange = (e) => {
+    const handleNameChange = () => {
         setTokenNameToCreate(inputNameRef.current.value);
     }
 
