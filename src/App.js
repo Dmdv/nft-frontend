@@ -33,8 +33,8 @@ export const App = () => {
     ];
 
     const initialCollections = [
-        {name: "Faraway 1", symbol: "FTK1", address: "0xfeDB19A138fdF3432A88eB3dB9AD36f7aed073B0"},
-        {name: "Faraway 2", symbol: "FTK2", address: "0xfeDB19A138fdF3432A88eB3dB9AD36f7aed073B0"},
+        {name: "Faraway 1", symbol: "FTK3", address: "0xfeDB19A138fdF3432A88eB3dB9AD36f7aed073B0", totalSupply: 1},
+        {name: "Faraway 2", symbol: "FTK4", address: "0xfeDB19A138fdF3432A88eB3dB9AD36f7aed073B0", totalSupply: 2},
     ];
 
     const [showModal, setShowModal] = useState(false);
@@ -54,6 +54,14 @@ export const App = () => {
         )()
     }, []);
 
+    useEffect(() => {
+        (
+            async () => {
+                await getCollections()
+            }
+        )()
+    }, []);
+
     const toggleModal = (i) => {
         if (i >= 0) {
             setSelectedNft(nfts[i]);
@@ -61,21 +69,71 @@ export const App = () => {
         setShowModal(!showModal);
     }
 
-    async function getCollections() {
-        console.log("loading NFT for contract: " + process.env.REACT_APP_ADDRESS);
+    async function createCollection(name, symbol) {
+        console.log("Creating collection with name: " + name + " and symbol: " + symbol);
+        const abi = [
+            "function create(string calldata name, string calldata symbol) external returns (address)",
+        ];
         const rpc = "https://goerli.blockpi.network/v1/rpc/public";
-
         const ethersProvider = new ethers.JsonRpcProvider(rpc);
-
-        let abi = [
-            "function count() public view returns (uint256)",
-        ]
-
-        let nftCollections = new ethers.Contract(
+        let factory = new ethers.Contract(
             process.env.REACT_APP_FACTORY_ADDRESS,
             abi,
             ethersProvider
         )
+
+        // const provider = new ethers.providers.Web3Provider(window.ethereum);
+
+        const address = await getWalletAddress();
+        if (address) {
+            console.log("Connected to address: " + address);
+            const signer = await ethersProvider.getSigner(address);
+            const tx = await factory.create(name, symbol, signer);
+            await tx.wait();
+        }
+    }
+
+    async function getCollections() {
+        console.log("Loading NFT Factory: " + process.env.REACT_APP_FACTORY_ADDRESS);
+        const rpc = "https://goerli.blockpi.network/v1/rpc/public";
+        const ethersProvider = new ethers.JsonRpcProvider(rpc);
+
+        const abi = [
+            "function count() public view returns (uint256)",
+            "function tokenName(address address_) public view returns (string memory)",
+            "function tokenSymbol(address address_) public view returns (string memory)",
+            "function tokenUri(address address_, uint256 tokenId_) public view returns (string memory)",
+            "function tokenTotalSupply(address address_) public view returns (uint256)"
+        ]
+
+        let factory = new ethers.Contract(
+            process.env.REACT_APP_FACTORY_ADDRESS,
+            abi,
+            ethersProvider
+        )
+
+        let collectionNumber = Number(await factory.count());
+        console.log("Number of collections created by Factory: " + collectionNumber);
+        for (let i = 0; i < collectionNumber; i++) {
+            let collection = initialCollections[0];
+            const address = await factory.tokenList(i);
+            console.log("Loading nft collection for address: " + address);
+
+            const name = await factory.tokenName(address)
+            const symbol = await factory.tokenSymbol(address);
+            const totalSupply = await factory.tokenTotalSupply(address);
+
+            console.log("Name: " + name);
+            console.log("Symbol: " + symbol);
+            console.log("Total supply: " + totalSupply);
+
+            collection.symbol = name;
+            collection.name = symbol;
+            collection.address = address;
+            collection.totalSupply = totalSupply;
+
+            // setCollections([...collections, collection]);
+        }
     }
 
     // TODO:
@@ -84,7 +142,7 @@ export const App = () => {
     // (react-hooks/exhaustive-deps)
     async function getNFTs(address) {
         console.log("Loading NFTs for address: " + address);
-        console.log("loading NFT for contract: " + process.env.REACT_APP_ADDRESS);
+        console.log("Loading NFTs for contract: " + process.env.REACT_APP_ADDRESS);
         const rpc = "https://goerli.blockpi.network/v1/rpc/public";
 
         const ethersProvider = new ethers.JsonRpcProvider(rpc);
