@@ -61,6 +61,23 @@ export const App = () => {
         setShowModal(!showModal);
     }
 
+    async function getCollections() {
+        console.log("loading NFT for contract: " + process.env.REACT_APP_ADDRESS);
+        const rpc = "https://goerli.blockpi.network/v1/rpc/public";
+
+        const ethersProvider = new ethers.JsonRpcProvider(rpc);
+
+        let abi = [
+            "function count() public view returns (uint256)",
+        ]
+
+        let nftCollections = new ethers.Contract(
+            process.env.REACT_APP_FACTORY_ADDRESS,
+            abi,
+            ethersProvider
+        )
+    }
+
     // TODO:
     // Warning:(57, 5) ESLint: The 'getNFTs' function makes the dependencies of useEffect Hook (at line 48) change on every render.
     // Move it inside the useEffect callback. Alternatively, wrap the definition of 'getNFTs' in its own useCallback() Hook.
