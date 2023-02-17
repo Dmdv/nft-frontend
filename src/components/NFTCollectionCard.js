@@ -1,9 +1,10 @@
 import styled from "styled-components";
 
 const NFTCollectionCard = (props) => {
-    let coll = props.collection;
+    const {collection: coll, onClick} = props;
+
     return (
-        <NftCollectionCard>
+        <NftCollectionCard onClick={() => onClick()}>
             <div style={{margin: 6}}>
                 <NftSymbol>{coll && coll.symbol}</NftSymbol>
                 <NftName>{coll && coll.name}</NftName>
@@ -42,6 +43,13 @@ const NftCollectionCard = styled.div`
   margin: 5px 0;
   box-shadow: 8px 8px 16px #d9d9d9,
     -8px -8px 16px #ffffff;
+  &:hover {
+    background-color: rgba(173,224,255,0.5);
+    transform: scale(1.05);
+    transform-origin: center;
+    transition: transform 0.4s ease-in-out;
+    cursor: pointer;
+  }
 `
 
 export {NFTCollectionCard};

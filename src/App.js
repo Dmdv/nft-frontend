@@ -46,6 +46,7 @@ export const App = () => {
     const inputNameRef = useRef(null);
     const inputSymbolRef = useRef(null);
     const buttonCreateRef = useRef(null);
+    const currentCollectionAddress = useRef(null);
 
     useEffect(() => {
         (
@@ -74,7 +75,6 @@ export const App = () => {
         }
         setShowModal(!showModal);
     }
-
 
     async function createCollection() {
         console.log("Started creating collection with name: " + tokenNameToCreate + " and symbol: " + tokenSymbolToCreate);
@@ -201,6 +201,11 @@ export const App = () => {
         await createCollection()
     }
 
+    const handleSelectedCollection = async (i) => {
+        console.log("Selected collection address: " + collections[i].address);
+        currentCollectionAddress.current.value = collections[i].address;
+    }
+
     // TODO:
     // Warning:(57, 5) ESLint: The 'getNFTs' function makes the dependencies of useEffect Hook (at line 48) change on every render.
     // Move it inside the useEffect callback. Alternatively, wrap the definition of 'getNFTs' in its own useCallback() Hook.
@@ -269,23 +274,32 @@ export const App = () => {
             <Container>
                 <Title>NFT collections factory</Title>
                 <SubTitle>The rarest and best</SubTitle>
+                <fieldset style={{border: "1px solid #ccc", marginBottom: 30}}>
+                    <legend>Create a new collection</legend>
                 <ContractCreator>
                     <Input placeholder="Token Symbol" ref={inputSymbolRef} onInput={handleSymbolChange}/>
                     <Input placeholder="Token Name" ref={inputNameRef}  onInput={handleNameChange}/>
                     <ConfirmationButton ref={buttonCreateRef} onClick={handleCreateCollection}>Create Collection</ConfirmationButton>
                 </ContractCreator>
+                </fieldset>
+                <fieldset style={{border: "1px solid #ccc"}}>
+                    <legend>Created collections</legend>
                 <CollectionList>
                     {
                         collections.map((collection, index) =>
-                            <NFTCollectionCard key={index} collection={collection}/>)
+                            <NFTCollectionCard key={index} collection={collection} onClick={() => handleSelectedCollection(index)} />)
                     }
                 </CollectionList>
+                </fieldset>
+
+                <fieldset style={{border: "1px solid #ccc", marginTop: 30}}>
+                    <legend>Mint new token for selected collection</legend>
+                <Input style={{width: 400, marginTop: 40}} placeholder="Contract Address" ref={currentCollectionAddress}></Input>
                 <ContractEditor>
-                    <Input placeholder="Contract Address"></Input>
-                    <Input placeholder="Token ID"></Input>
                     <Input placeholder="Token URI"></Input>
                     <ConfirmationButton>Mint</ConfirmationButton>
                 </ContractEditor>
+                </fieldset>
 
                 <Grid>
                     {
