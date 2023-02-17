@@ -1,10 +1,10 @@
 import {NFTCard} from "./components/NFTCard";
 import {NFTModal} from "./components/NFTModal";
 import {NFTCollectionCard} from "./components/NFTCollectionCard";
-import styled from "styled-components";
 import {useState, useEffect, useRef} from 'react';
-import {ethers} from "ethers";
 import {getWalletAddress} from "./helpers";
+import styled from "styled-components";
+import {ethers} from "ethers";
 import axios from 'axios';
 
 export const App = () => {
@@ -37,16 +37,19 @@ export const App = () => {
         {name: "Faraway 2", symbol: "FTK4", address: "0xfeDB19A138fdF3432A88eB3dB9AD36f7aed073B0", totalSupply: 2},
     ];
 
+    // States
     const [showModal, setShowModal] = useState(false);
     const [selectedNft, setSelectedNft] = useState();
     const [nfts, setNfts] = useState(initialNfts);
     const [collections, setCollections] = useState(initialCollections);
     const [tokenSymbolToCreate, setTokenSymbolToCreate] = useState("");
     const [tokenNameToCreate, setTokenNameToCreate] = useState("");
+    const [tokenUriToCreate, setTokenUriToCreate] = useState("");
+    // Refs
     const inputNameRef = useRef(null);
     const inputSymbolRef = useRef(null);
-    const buttonCreateRef = useRef(null);
     const currentCollectionAddress = useRef(null);
+    const inputTokenUriRef = useRef(null);
 
     useEffect(() => {
         (
@@ -76,10 +79,10 @@ export const App = () => {
         setShowModal(!showModal);
     }
 
-    async function createCollection() {
-        console.log("Started creating collection with name: " + tokenNameToCreate + " and symbol: " + tokenSymbolToCreate);
-        if (tokenNameToCreate === "" || tokenSymbolToCreate === "") {
-            console.log("Name or symbol is empty");
+    async function mintNft() {
+        console.log("Started minting token");
+        if (currentCollectionAddress.current.value === "") {
+            console.error("Collection address is empty");
             return;
         }
 
@@ -92,17 +95,53 @@ export const App = () => {
             // only have read-only access
             console.log("MetaMask not installed; using read-only defaults")
             provider = ethers.getDefaultProvider();
-
         } else {
             // Connect to the MetaMask EIP-1193 object. This is a standard
             // protocol that allows Ethers access to make all read-only
             // requests through MetaMask.
             provider = new ethers.BrowserProvider(window.ethereum)
+        }
 
-            // It also provides an opportunity to request access to write
-            // operations, which will be performed by the private key
-            // that MetaMask manages for the user.
-            signer = await provider.getSigner();
+        const abi = [
+            "function mint(address token, address to, string calldata uri)"
+        ];
+
+        signer = await provider.getSigner()
+
+        let nft = new ethers.Contract(
+            process.env.REACT_APP_FACTORY_ADDRESS,
+            abi,
+            signer
+        )
+
+        console.log("Minting token with uri: " + tokenUriToCreate + " to address: " + signer.address)
+        const tx = await nft.mint(currentCollectionAddress.current.value, signer.address, tokenUriToCreate);
+        await tx.wait();
+        console.log("Token has been created");
+        await getNFTs(signer.address);
+    }
+
+    async function createCollection() {
+        console.log("Started creating collection with name: " + tokenNameToCreate + " and symbol: " + tokenSymbolToCreate);
+        if (tokenNameToCreate === "" || tokenSymbolToCreate === "") {
+            console.error("Name or symbol is empty");
+            return;
+        }
+
+        let signer;
+        let provider;
+        if (window.ethereum == null) {
+            // If MetaMask is not installed, we use the default provider,
+            // which is backed by a variety of third-party services (such
+            // as INFURA). They do not have private keys installed so are
+            // only have read-only access
+            console.log("MetaMask not installed; using read-only defaults")
+            provider = ethers.getDefaultProvider();
+        } else {
+            // Connect to the MetaMask EIP-1193 object. This is a standard
+            // protocol that allows Ethers access to make all read-only
+            // requests through MetaMask.
+            provider = new ethers.BrowserProvider(window.ethereum)
         }
 
         const abi = [
@@ -119,21 +158,6 @@ export const App = () => {
             abi,
             signer
         )
-
-        // Begin listening for any Transfer event
-        // factory.on("TokenCreated", (from, to, _amount, event) => {
-        //     console.log("Token created: " + from + " to " + to);
-        //     console.log(event);
-        //     console.log(event.args);
-        //     (
-        //         async () => {
-        //             console.log("Refreshing collections");
-        //             await getCollections();
-        //         }
-        //     )()
-        //
-        //     event.removeListener();
-        // });
 
         const tx = await factory.create(tokenNameToCreate, tokenSymbolToCreate, signer);
         await tx.wait();
@@ -197,8 +221,16 @@ export const App = () => {
         setTokenNameToCreate(inputNameRef.current.value);
     }
 
+    const handleTokenUriChange = () => {
+        setTokenUriToCreate(inputTokenUriRef.current.value);
+    }
+
     const handleCreateCollection = async () => {
         await createCollection()
+    }
+
+    const handleMintNFT = async () => {
+        await mintNft();
     }
 
     const handleSelectedCollection = async (i) => {
@@ -276,29 +308,34 @@ export const App = () => {
                 <SubTitle>The rarest and best</SubTitle>
                 <fieldset style={{border: "1px solid #ccc", marginBottom: 30}}>
                     <legend>Create a new collection</legend>
-                <ContractCreator>
-                    <Input placeholder="Token Symbol" ref={inputSymbolRef} onInput={handleSymbolChange}/>
-                    <Input placeholder="Token Name" ref={inputNameRef}  onInput={handleNameChange}/>
-                    <ConfirmationButton ref={buttonCreateRef} onClick={handleCreateCollection}>Create Collection</ConfirmationButton>
-                </ContractCreator>
+                    <ContractCreator>
+                        <Input placeholder="Token Symbol" ref={inputSymbolRef} onInput={handleSymbolChange}/>
+                        <Input placeholder="Token Name" ref={inputNameRef} onInput={handleNameChange}/>
+                        <ConfirmationButton onClick={handleCreateCollection}>
+                            Create Collection
+                        </ConfirmationButton>
+                    </ContractCreator>
                 </fieldset>
                 <fieldset style={{border: "1px solid #ccc"}}>
                     <legend>Created collections</legend>
-                <CollectionList>
-                    {
-                        collections.map((collection, index) =>
-                            <NFTCollectionCard key={index} collection={collection} onClick={() => handleSelectedCollection(index)} />)
-                    }
-                </CollectionList>
+                    <CollectionList>
+                        {
+                            collections.map((collection, index) =>
+                                <NFTCollectionCard key={index} collection={collection}
+                                                   onClick={() => handleSelectedCollection(index)}/>)
+                        }
+                    </CollectionList>
                 </fieldset>
 
                 <fieldset style={{border: "1px solid #ccc", marginTop: 30}}>
                     <legend>Mint new token for selected collection</legend>
-                <Input style={{width: 400, marginTop: 40}} placeholder="Contract Address" ref={currentCollectionAddress}></Input>
-                <ContractEditor>
-                    <Input placeholder="Token URI"></Input>
-                    <ConfirmationButton>Mint</ConfirmationButton>
-                </ContractEditor>
+                    <Input style={{width: 400, marginTop: 40}} placeholder="Contract Address" ref={currentCollectionAddress}/>
+                    <ContractEditor>
+                        <Input ref={inputTokenUriRef} placeholder="Token URI" onInput={handleTokenUriChange}/>
+                        <ConfirmationButton onClick={handleMintNFT}>
+                            Mint
+                        </ConfirmationButton>
+                    </ContractEditor>
                 </fieldset>
 
                 <Grid>
